@@ -1,0 +1,25 @@
+import hust.sqa.btl.instrument.*;
+
+public class NumberComparator instantiates BranchInstrumentor {
+
+    public NumberComparator(){
+        super();
+    }
+
+    public String checkPrimeNumber(int number){
+          if(number < 2) return "Number must be greater than 1";
+          boolean isPrime = true;
+
+          for(int i = 2; i <= number/2; i ++){
+              if(number % i == 0){
+                isPrime = false;
+                break;
+              }
+          }
+            if(isPrime){
+                return "Is Prime Number";
+            } else {
+                return "Is Not Prime Number";
+            }
+      }
+}
