@@ -140,9 +140,8 @@ public class BranchInstrumentor extends OJClass {
      */
     private void printPath(int target) {
         pathFile.print(target + ":");
-        for (Object o : BranchTraceVisitor.getControlDependences()) {
-            Integer br = (Integer) o;
-            pathFile.print(" " + br);
+        for (Integer node : BranchTraceVisitor.getControlDependences()) {
+            pathFile.print(" " + node);
         }
         pathFile.println();
     }

@@ -10,6 +10,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class ChromosomeFormer {
 
@@ -135,7 +136,6 @@ public class ChromosomeFormer {
         prependConstructor(classUnderTest);
         appendInitMethodCall(classUnderTest, null, idMethodUnderTest);
         List list = chromosome.getActualValues();
-
     }
 
     /**
@@ -152,7 +152,7 @@ public class ChromosomeFormer {
 
         chromosome.setCoveredTarget(branchTarget);
 
-     //   System.out.println(getChromosome().toString());
+        //   System.out.println(getChromosome().toString());
         exec.execute(classUnderTest, getChromosome().toString());
         Set coverBranch = (Set) exec.getExecutionTrace(classUnderTest);
         chromosome.expectResult = exec.expectResult;
@@ -187,7 +187,7 @@ public class ChromosomeFormer {
             }
         }
         chromosome.fitness = fitness;
-  //      System.out.println("fitness:" + fitness);
+        //      System.out.println("fitness:" + fitness);
     }
 
     /**
@@ -495,13 +495,13 @@ public class ChromosomeFormer {
         }
         Chromosome neededConstr = new Chromosome();
         className = mapToConcreteClass(className);
-        List constrList = (List) constructors.get(className);
+        List<MethodSignature> constrList = constructors.get(className);
         int constrNum = constrList.size();
         if (constrIndex == -1)
             constrIndex = randomGenerator.nextInt(constrNum);
-        MethodSignature constrSign = (MethodSignature) constrList.get(constrIndex);
-        List formalParams = (List) constrSign.getParameters();
-        List actualParams = new LinkedList();
+        MethodSignature constrSign = constrList.get(constrIndex);
+        List<String> formalParams = constrSign.getParameters();
+        List<String> actualParams = new ArrayList<>();
         for (Object formalParam : formalParams) {
             String paramType = (String) formalParam;
             if (isPrimitiveArrayType(paramType)) {
@@ -655,20 +655,16 @@ public class ChromosomeFormer {
         if (paramString.length == 1 && paramString[0].equals(""))
             paramString = new String[0];
         MethodSignature methodSign = lookForMethod(className, methodName, paramString);
-        List formalParams = (List) methodSign.getParameters();
-        List actualParams = new LinkedList();
+        List<String> formalParams = methodSign.getParameters();
+        List<String> actualParams = new ArrayList<>();
         if (objId == null)
             objId = chromosome.getObjectId(concreteTypes(className));
-        Iterator i = formalParams.iterator();
-        while (i.hasNext()) {
-            String paramType = (String) i.next();
+        for (String paramType : formalParams) {
             if (isPrimitiveArrayType(paramType)) {
-                Random rd = new Random();
-                int length = 2 + rd.nextInt(5);
+                int length = 2 + new Random().nextInt(5);
                 setLengthArray(length);
                 String values = buildArrayValue(paramType, length);
                 actualParams.add(values);
-
             } else if (isPrimitiveType(paramType)) {
                 actualParams.add(buildValue(paramType));
             } else {
@@ -699,26 +695,12 @@ public class ChromosomeFormer {
      * @param idMethodUnderTest
      */
     public void appendInitMethodCall(String className, String objId, int idMethodUnderTest) {
-        List methodList = (List) methods.get(className);
-        if (methodList == null)
-            return;
+        List<MethodSignature> methodList = methods.get(className);
+        if (methodList == null) return;
         int methodNum = methodList.size();
-        int methodIndex = idMethodUnderTest;
-        MethodSignature methodSign = (MethodSignature) methodList.get(methodIndex);
-        String fullMethodName = className + "." + methodSign.getName();
-        fullMethodName += "(";
-        List params = (List) methodSign.getParameters();
-        Iterator i = params.iterator();
-        boolean first = true;
-        while (i.hasNext()) {
-            String paramType = (String) i.next();
-            if (first)
-                first = false;
-            else
-                fullMethodName += ",";
-            fullMethodName += paramType;
-        }
-        fullMethodName += ")";
+        MethodSignature methodSign = methodList.get(idMethodUnderTest);
+        String params = String.join(",", methodSign.getParameters());
+        String fullMethodName = className + "." + methodSign.getName() + "(" + params + ")";
         appendMethodCall(fullMethodName, objId);
     }
 
@@ -742,7 +724,7 @@ public class ChromosomeFormer {
      */
     public void readSignatures(String fileName) {
         try {
-            Set usedClassNames = new HashSet();
+            Set<String> usedClassNames = new HashSet<>();
             String s, r = "";
             BufferedReader in = new BufferedReader(new FileReader(fileName));
             while ((s = in.readLine()) != null && !s.equals("#")) {
@@ -754,13 +736,13 @@ public class ChromosomeFormer {
                     String[] paramNames = s.substring(s.indexOf("(") + 1, s.indexOf(")")).split(",");
                     if (paramNames.length == 1 && paramNames[0].equals(""))
                         paramNames = new String[0];
-                    List params = new LinkedList();
-                    for (int i = 0; i < paramNames.length; i++) {
-                        params.add(paramNames[i]);
-                        String usedClass = paramNames[i];
-                        if (paramNames[i].indexOf("[") != -1)
-                            usedClass = paramNames[i].substring(0, paramNames[i].indexOf("["));
-                        if (!isPrimitiveType(paramNames[i]))
+                    List<String> params = new ArrayList<>();
+                    for (String paramName : paramNames) {
+                        params.add(paramName);
+                        String usedClass = paramName;
+                        if (paramName.contains("["))
+                            usedClass = paramName.substring(0, paramName.indexOf("["));
+                        if (!isPrimitiveType(paramName))
                             usedClassNames.add(usedClass);
                     }
                     String simpleClassName = className.substring(className.lastIndexOf(".") + 1);
@@ -803,15 +785,13 @@ public class ChromosomeFormer {
     private void checkConstructorsAvailable(Set usedClasses) {
         boolean error = false;
         String cl = "";
-        Iterator k = concreteTypes.keySet().iterator();
+        Iterator<String> k = concreteTypes.keySet().iterator();
         while (!error && k.hasNext()) {
-            String absType = (String) k.next();
-            List types = (List) concreteTypes.get(absType);
-            Iterator j = types.iterator();
+            String absType = k.next();
+            List<String> types = concreteTypes.get(absType);
+            Iterator<String> j = types.iterator();
             while (!error && j.hasNext()) {
-                cl = (String) j.next();
-                if (!constructors.containsKey(cl))
-                    error = true;
+                if (!constructors.containsKey(j.next())) error = true;
             }
         }
         Iterator i = usedClasses.iterator();

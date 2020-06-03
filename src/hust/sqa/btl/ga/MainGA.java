@@ -5,8 +5,10 @@ import hust.sqa.btl.utils.Paths;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.IntFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class MainGA {
     static String[] inputs = {"NumberComparator"};
@@ -54,6 +56,13 @@ public class MainGA {
         return chromosomeFormer.methods.values().toString().split(",");
     }
 
+    private static List<Integer> getBranchIds(String branchStringIds) {
+        return List.of(branchStringIds.split(","))
+                .stream()
+                .map(Integer::parseInt)
+                .collect(Collectors.toList());
+    }
+
     /**
      * tạo các testcase bằng cách áp dụng GA
      *
@@ -68,48 +77,41 @@ public class MainGA {
         List<String> listTarget = testGenerator.getBranchWithMethod();
         List<Set<String>> branchTargets = testGenerator.getBranchSetFromPaths();
 
+        System.out.println("========= Target");
+        for (String s : listTarget) {
+            System.out.println(s);
+        }
+        System.out.println("========= Branch Target");
+        for (Set<String> set : branchTargets) {
+            System.out.println(set);
+        }
+
         String[] branchWithMethod = getBranchForMethod(listTarget, branchTargets);
+
+        System.out.println("====BranchWithMethod");
+        for (String branch : branchWithMethod) {
+            System.out.println(branch);
+        }
 
         int numberOfTestcase = 0;
         boolean covered = false;
 
         String[] methods = getMethods(classUnderTest);
-
-        System.out.println("=== List Target");
-        for (String s : listTarget) {
-            System.out.println(s);
-        }
-        System.out.println("=== Branch");
-        for (Set<String> branchTarget : branchTargets) {
-            System.out.println(branchTarget);
-        }
-
-        for (String s : branchWithMethod) {
-            System.out.println("branch: " + s);
-        }
+        System.out.println("==== Methods");
         for (String method : methods) {
-            System.out.println("method: " + method);
+            System.out.println(method);
         }
+        ;
 
+        for (int methodIndex = 0; methodIndex < methods.length; methodIndex++) {
 
-        for (int index = 0; index < methods.length; index++) {
+            Population.idMethodUnderTest = methodIndex;
+            int branchMethodIndex = methodIndex + listTarget.size() - methods.length;
 
-            Population.idMethodUnderTest = index;
+            List<Integer> branchIds = getBranchIds(branchWithMethod[branchMethodIndex]);
 
-            String[] idBranchString = branchWithMethod[index + listTarget.size() - methods.length].split(",");
-            int[] idBranch = new int[idBranchString.length];
-            for (int k = 0; k < idBranchString.length; k++) {
-                idBranch[k] = Integer.parseInt(idBranchString[k]);
-            }
-
-            for (int branch : idBranch) {
-                System.out.println("Branch id " + branch);
-            }
-            for (String s : idBranchString) {
-                System.out.println("idBranchString " + s);
-            }
-            for (int i = idBranch[0]; i <= idBranch[idBranchString.length - 1]; i++) {
-                // Với mỗi target, xây dựng quần thể ban đầu và thực hiên thuật toán GA
+            // Với mỗi target, xây dựng quần thể ban đầu và thực hiên thuật toán GA
+            for (int i = branchIds.get(0); i <= branchIds.get(branchIds.size() - 1); i++) {
                 Population.setCurTarget(branchTargets.get(i));
 
                 String string = String.join(", ", branchTargets.get(i));
@@ -199,6 +201,24 @@ public class MainGA {
      * @param listTarget       list các target của các method
      * @param listBranchTarget list các branch
      * @return String[] ptử thứ i trong mảng chứa các branch ứng với method thứ i
+     * Ví dụ:
+     * ========= Target
+     * [1]
+     * [2, 3, 4, 5, 6, 7, 8, 9]
+     * ========= Branch Target
+     * [1]
+     * [2, 3]
+     * [2, 4]
+     * [2, 5, 6]
+     * [2, 5, 7]
+     * [2, 8]
+     * [2, 9]
+     * ==== BranchForMethod
+     * 0,
+     * 1,2,3,4,5,6,
+     * Giải thích:
+     * với method đầu tiên, sẽ có branch ở index 0 ([1])
+     * với method thứ 2: sẽ có các branch ở index 1,2,3,4,5,6 ([2, 3], [2, 4], [2, 5, 6], [2, 5, 7], [2, 8], [2, 9])
      */
     public static String[] getBranchForMethod(List<String> listTarget, List<Set<String>> listBranchTarget) {
         String[] branchWithMethod = new String[listTarget.size()];
@@ -208,8 +228,9 @@ public class MainGA {
             for (int j = 0; j < listBranchTarget.size(); j++) {
                 Pattern pattern = Pattern.compile("[0-9]+");
                 String temp = "";
-                for (int k = 0; k < listBranchTarget.get(j).toString().length(); k++) {
-                    Matcher matcher = pattern.matcher(listBranchTarget.get(j).toString().charAt(k) + "");
+                Set<String> branchTarget = listBranchTarget.get(j);
+                for (int k = 0; k < branchTarget.toString().length(); k++) {
+                    Matcher matcher = pattern.matcher(branchTarget.toString().charAt(k) + "");
                     if (matcher.matches()) {
                         temp += listBranchTarget.get(j).toString().charAt(k) + "";
                     } else if (!temp.isEmpty()) break;

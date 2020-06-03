@@ -124,16 +124,16 @@ public class Population {
      * @throws IOException
      */
     public static Population generateRandomPopulation() throws IOException {
-        List<Chromosome> individs = new ArrayList<>();
+        List<Chromosome> individuals = new ArrayList<>();
         chromosomeFormer.idMethodUnderTest = idMethodUnderTest;
         for (int j = 0; j < Population.populationSize; j++) {
             chromosomeFormer.buildNewChromosome();
-            individs.add(chromosomeFormer.getChromosome());
+            individuals.add(chromosomeFormer.getChromosome());
 
             chromosomeFormer.fitness = 0;
             chromosomeFormer.calculateApproachLevel(curTarget);
         }
-        return new Population(individs);
+        return new Population(individuals);
     }
 
     /**

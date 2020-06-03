@@ -1,8 +1,3 @@
-/*
- * Copyright(C) 2019 NgocAnh
- *
- * Chromosome.java, Sep 26, 2019 NgocAnh
- */
 package hust.sqa.btl.ga;
 
 import java.util.*;
