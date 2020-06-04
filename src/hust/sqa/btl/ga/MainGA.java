@@ -5,14 +5,13 @@ import hust.sqa.btl.utils.Paths;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.function.IntFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class MainGA {
-    static String[] inputs = {"NumberComparator"};
-    private static final String CLASS_UNDER_TEST = "NumberComparator";
+    static String[] inputs = {"Triangle", "NumberComparator"};
+    private static final String CLASS_UNDER_TEST = "Triangle";
     static float coverRatio = 0f;
     static int numberGen = 0;
     private static long startTime = 0L;
@@ -28,12 +27,8 @@ public class MainGA {
      */
     public static void main(String[] args) throws InterruptedException, IOException {
 
-        // tạo testcase
         setupTestGenerator(CLASS_UNDER_TEST);
         generateTestcaseWithGA(CLASS_UNDER_TEST);
-        // tổng số lần generate để tạo được testcase
-        System.out.println("number of gen: " + numberGen);
-
     }
 
     private static void setupTestGenerator(String classUnderTest) {
@@ -101,7 +96,6 @@ public class MainGA {
         for (String method : methods) {
             System.out.println(method);
         }
-        ;
 
         for (int methodIndex = 0; methodIndex < methods.length; methodIndex++) {
 
@@ -114,14 +108,12 @@ public class MainGA {
             for (int i = branchIds.get(0); i <= branchIds.get(branchIds.size() - 1); i++) {
                 Population.setCurTarget(branchTargets.get(i));
 
-                String string = String.join(", ", branchTargets.get(i));
                 String[] target = (String.join(", ", branchTargets.get(i))).split(",");
                 int curFittestTarget = target.length;
 
-                // Khởi tạo quẩn thể và tính fitness cho từng chromosome
                 Population initPop = Population.generateRandomPopulation();
-                // Sắp xếp các cá thể theo thứ tự fitness giảm dần
                 Collections.sort(initPop.individuals);
+
                 List<Set> extendTarget = Population.getExtendTarget();
                 if (extendTarget.isEmpty()) {
                     int numberLoops = initPop.randomCrossoverAndMutation(curFittestTarget);
@@ -137,22 +129,20 @@ public class MainGA {
                     for (int j = 0; j < extendTarget.size(); j++) {
                         Population.preTarget = Population.getCurTarget();
                         Population.setCurTarget(extendTarget.get(j));
-                        // tính tại giá trị fitness
                         initPop = Population.generateRandomPopulation();
-                        // Sắp xếp các cá thể theo thứ tự fitness giảm dần
-                        Collections.sort(initPop.individuals);
-                        target = Population.curTarget.toString().split(",");
+
+                        target = Population.getCurTarget().toString().split(",");
                         curFittestTarget = target.length;
                         int generationCount = initPop.randomCrossoverAndMutation(curFittestTarget);
 
-                        Population.curTarget = Population.preTarget;
+                        Population.setCurTarget(Population.preTarget);
                         Population.preTarget = null;
+
                         if (generationCount < GAConfig.MAX_LOOP) {
                             numberGen += generationCount;
                             covered = true;
                             numberOfTestcase++;
 
-                            // add testcase phù hợp vào quần thể đích
                             if (numberOfTestcase == 1) {
                                 destinationPopulation = initPop.generateDestinationPopulation();
                             } else {
@@ -176,10 +166,10 @@ public class MainGA {
         }
         long time = System.currentTimeMillis() - startTime;
         if (!coveredBranchTargets.isEmpty()) {
-//            for (Chromosome chromosome : destinationPopulation.individuals) {
-//                System.out.println(chromosome.toString());
-//                System.out.println(chromosome.target);
-//            }
+            for (Chromosome chromosome : destinationPopulation.individuals) {
+                System.out.println(chromosome.toString());
+                System.out.println(chromosome.target);
+            }
             testGenerator.junitFile = classUnderTest + "Test.java";
             testGenerator.printJunitFileFirst(destinationPopulation);
         } else {

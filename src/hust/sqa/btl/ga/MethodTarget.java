@@ -3,19 +3,16 @@ package hust.sqa.btl.ga;
 import java.util.LinkedList;
 import java.util.List;
 
-/**
- * @author AnhBTN
- */
 class MethodTarget extends Target {
 	/**
 	 * Method được cover
 	 */
-	String method;
+	private String method;
 
 	/**
 	 * list branch sẽ đc cover
 	 */
-	List branches;
+	private List branches;
 
 	/**
 	 * các nhánh được cover được thêm bởi các method invocations.

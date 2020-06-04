@@ -10,5 +10,5 @@ public interface Paths {
     String RELATIVE_PATH = ".." + File.separator + PROJECT_NAME + File.separator + "src" + File.separator;
     String OUTPUT_PATH = RELATIVE_PATH + "output" + File.separator;
     String INPUT_PATH = RELATIVE_PATH;
-    String TEST_PATH = RELATIVE_PATH + PACKAGE_TEST + File.separator; // ../AutoGenerateTestCases/test/
+    String TEST_PATH = RELATIVE_PATH; // ../AutoGenerateTestCases/
 }

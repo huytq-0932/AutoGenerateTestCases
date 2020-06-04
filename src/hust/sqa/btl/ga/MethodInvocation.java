@@ -1,9 +1,7 @@
 package hust.sqa.btl.ga;
 
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Định nghĩa method
@@ -23,7 +21,7 @@ public class MethodInvocation extends Action {
 	 * @param vals
 	 *            Input values (e.g., "$x0", "23")
 	 */
-	MethodInvocation(String objVar, String methodName, List formalParams, List vals) {
+	MethodInvocation(String objVar, String methodName, List<String> formalParams, List<String> vals) {
 		targetObject = objVar;
 		name = methodName;
 		parameterTypes = formalParams;
@@ -103,32 +101,27 @@ public class MethodInvocation extends Action {
 		} else {
 			s += targetObject.substring(1) + "." + name;
 			s += "(";
-			Iterator i = parameterTypes.iterator();
-			Iterator j = parameterValues.iterator();
+			Iterator<String> i = parameterTypes.iterator();
+			Iterator<String> j = parameterValues.iterator();
 			while (i.hasNext() && j.hasNext()) {
-				String param = (String) j.next();
+				String param = j.next();
 				if (param.startsWith("$"))
 					param = param.substring(1);
 				if (param.contains(" ")) {
-					String type = i.next().toString();
+					String type = i.next();
 					int index = type.indexOf("[") + 1;
+					String init;
 					if (type.substring(0, index - 1).equals("float")) {
-						String init = "\t" + type.substring(0, index) + "] t = {(float)"
+						init = "\t" + type.substring(0, index) + "] t = {(float)"
 								+ param.replaceAll(" ", ",(float)") + "};\n";
-						if (s.endsWith("("))
-							s += "t";
-						else
-							s += ", " + "t";
-						s = init + s;
-
 					} else {
-						String init = "\t" + type.substring(0, index) + "] t = {" + param.replaceAll(" ", ",") + "};\n";
-						if (s.endsWith("("))
-							s += "t";
-						else
-							s += ", " + "t";
-						s = init + s;
+						init = "\t" + type.substring(0, index) + "] t = {" + param.replaceAll(" ", ",") + "};\n";
 					}
+					if (s.endsWith("("))
+						s += "t";
+					else
+						s += ", " + "t";
+					s = init + s;
 				} else {
 					if (s.endsWith("("))
 						s += param;
@@ -142,17 +135,4 @@ public class MethodInvocation extends Action {
 		}
 
 	}
-
-	/**
-	 * Tập các biến sử dụng cho action (e.g., {$x1, $x2} for $x1.A($x2)).
-	 */
-	Set getUse() {
-		Set use = new HashSet();
-		use.add(targetObject);
-		Iterator i = getParameterObjects().iterator();
-		while (i.hasNext())
-			use.add(i.next());
-		return use;
-	}
-
 }

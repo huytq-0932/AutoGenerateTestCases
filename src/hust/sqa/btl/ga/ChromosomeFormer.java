@@ -1,6 +1,8 @@
 
 package hust.sqa.btl.ga;
 
+import hust.sqa.btl.utils.ValueConfig;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -10,7 +12,6 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class ChromosomeFormer {
 
@@ -64,7 +65,7 @@ public class ChromosomeFormer {
     }
 
     /**
-     * @param methodUnderTest the methodUnderTest to set
+     * @param idMethodUnderTest the methodUnderTest to set
      */
     public void setMethodUnderTest(int idMethodUnderTest) {
         this.idMethodUnderTest = idMethodUnderTest;
@@ -135,13 +136,12 @@ public class ChromosomeFormer {
         chromosome = new Chromosome();
         prependConstructor(classUnderTest);
         appendInitMethodCall(classUnderTest, null, idMethodUnderTest);
-        List list = chromosome.getActualValues();
     }
 
     /**
-     * Tính toán ApproadLevel cho các case test
+     * Tính toán ApproachLevel cho các case test
      *
-     * @param chrom chromosome đang được xét thực thi
+     * @param branchTarget chromosome đang được xét thực thi
      * @throws IOException
      */
 
@@ -152,14 +152,14 @@ public class ChromosomeFormer {
 
         chromosome.setCoveredTarget(branchTarget);
 
-        //   System.out.println(getChromosome().toString());
+   //     System.out.println(getChromosome().toString());
         exec.execute(classUnderTest, getChromosome().toString());
         Set coverBranch = (Set) exec.getExecutionTrace(classUnderTest);
         chromosome.expectResult = exec.expectResult;
         chromosome.setCoveredBranches(coverBranch);
 
-//        System.out.println("coverBr:" + chromosome.coveredBranchTargets);
-//        System.out.println("targerBr:" + branchTarget);
+        //System.out.println("coverBr:" + chromosome.coveredBranchTargets);
+      //  System.out.println("targerBr:" + branchTarget);
 
         Pattern pattern = Pattern.compile("[0-9]+");
         StringBuilder temp = new StringBuilder();
@@ -187,7 +187,7 @@ public class ChromosomeFormer {
             }
         }
         chromosome.fitness = fitness;
-        //      System.out.println("fitness:" + fitness);
+        //System.out.println("fitness:" + fitness);
     }
 
     /**
@@ -367,8 +367,8 @@ public class ChromosomeFormer {
      * @param type "int", với phạm vi "[l;u]"
      */
     public static String buildIntValue(String type) {
-        int lowBound = -65335;
-        int upBound = 65335;
+        int lowBound = ValueConfig.MIN_INT;
+        int upBound = ValueConfig.MAX_INT;
 
         if (type.contains("[")) {
             String range = type.substring(type.indexOf("[") + 1, type.indexOf("]"));
@@ -389,8 +389,8 @@ public class ChromosomeFormer {
      * @param type "float" hoặc "double", với phạm vi "[l;u]"
      */
     public static String buildRealValue(String type) {
-        int lowBound = -65335;
-        int upBound = 65335;
+        int lowBound = ValueConfig.MIN_INT;
+        int upBound = ValueConfig.MAX_INT;
         if (type.contains("[")) {
             String range = type.substring(type.indexOf("[") + 1, type.indexOf("]"));
             if (!range.contains(";"))
@@ -477,10 +477,8 @@ public class ChromosomeFormer {
      */
     Chromosome buildConstructor(String className, String objId, int constrIndex) {
         String objVar = "$x" + idCounter;
-        if (objId != null)
-            objVar = objId;
-        else
-            idCounter++;
+        if (objId != null) objVar = objId;
+        else idCounter++;
         if (className.contains("[")) {
             String percent = className.substring(className.indexOf(";") + 1, className.indexOf("%"));
             int nullProb = Integer.parseInt(percent);
@@ -565,23 +563,17 @@ public class ChromosomeFormer {
      * @return method signature object (class: MethodSignature)
      */
     private MethodSignature lookForMethod(String className, String methodName, String[] params) {
-        List signatureList = (List) methods.get(className);
-        Iterator i = signatureList.iterator();
-        while (i.hasNext()) {
-            MethodSignature sign = (MethodSignature) i.next();
+        List<MethodSignature> signatureList = methods.get(className);
+        for (MethodSignature sign : signatureList) {
             String curMethodName = sign.getName();
-            List curParams = (List) sign.getParameters();
+            List<String> curParams = sign.getParameters();
             if (!curMethodName.equals(methodName) || curParams.size() != params.length)
                 continue;
-            Iterator j = curParams.iterator();
             boolean found = true;
             int k = 0;
-            while (j.hasNext()) {
-                String curParam = (String) j.next();
-                if (curParam.indexOf("[") != -1)
-                    curParam = curParam.substring(0, curParam.indexOf("["));
-                if (params[k].indexOf("[") != -1)
-                    params[k] = params[k].substring(0, params[k].indexOf("["));
+            for (String curParam : curParams) {
+                if (curParam.contains("[")) curParam = curParam.substring(0, curParam.indexOf("["));
+                if (params[k].contains("[")) params[k] = params[k].substring(0, params[k].indexOf("["));
                 if (!curParam.equals(params[k++])) {
                     found = false;
                     break;
@@ -606,22 +598,16 @@ public class ChromosomeFormer {
         String[] params = constr.substring(constr.indexOf("(") + 1, constr.indexOf(")")).split(",");
         if (params.length == 1 && params[0].equals(""))
             params = new String[0];
-        List signatureList = (List) constructors.get(className);
+        List<MethodSignature> signatureList = constructors.get(className);
         int constrIndex = -1;
-        Iterator i = signatureList.iterator();
-        while (i.hasNext()) {
-            MethodSignature sign;
-            sign = (MethodSignature) i.next();
+        for (MethodSignature methodSignature : signatureList) {
             constrIndex++;
-            String curConstrName = sign.getName();
-            List curParams = (List) sign.getParameters();
-            if (!curConstrName.equals(constrName) || curParams.size() != params.length)
-                continue;
-            Iterator j = curParams.iterator();
+            String curConstrName = methodSignature.getName();
+            List<String> curParams = methodSignature.getParameters();
+            if (!curConstrName.equals(constrName) || curParams.size() != params.length) continue;
             boolean found = true;
             int k = 0;
-            while (j.hasNext()) {
-                String curParam = (String) j.next();
+            for (String curParam : curParams) {
                 if (!curParam.equals(params[k++])) {
                     found = false;
                     break;
@@ -780,7 +766,7 @@ public class ChromosomeFormer {
      * Việc thực thi bị gián đoạn nếu không có hàm constructor cho một số lớp được
      * sử dụng.
      *
-     * @param usedClass Tập hợp tất cả các lớp được sử dụng trong chữ ký.
+     * @param usedClasses Tập hợp tất cả các lớp được sử dụng trong chữ ký.
      */
     private void checkConstructorsAvailable(Set usedClasses) {
         boolean error = false;

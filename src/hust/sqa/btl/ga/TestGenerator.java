@@ -257,7 +257,7 @@ public class TestGenerator {
                 return;
             String junitClass = junitFile.substring(0, junitFile.indexOf("."));
             PrintStream out = new PrintStream(new FileOutputStream(Paths.TEST_PATH + junitFile));
-     //       out.println("package " + Paths.PACKAGE_TEST + ";");
+          //  out.println("package " + Paths.PACKAGE_TEST + ";");
             out.println("import junit.framework.*;");
 
             out.println();

@@ -10,11 +10,11 @@ public class Population {
     /**
      * Used to randomly select individuals for new population.
      */
-    static Random randomGenerator = new Random();
+    private static Random randomGenerator = new Random();
     /**
      * Target hiện tại đang xét của population
      */
-    static Set curTarget;
+    private static Set curTarget;
 
     /**
      * @return the curTarget
@@ -142,7 +142,8 @@ public class Population {
      * @return quần thể
      */
     public Population selection() {
-        int numberSelection = (int) (populationSize * GAConfig.CUMULATIVE_PROBABILITY);
+        int numberSelection = (int) (populationSize* GAConfig.CUMULATIVE_PROBABILITY);
+   //     populationSize = Math.min(populationSize, numberSelection);
         List<Chromosome> newIndividuals = new ArrayList<>();
         for (int i = 0; i < numberSelection; i++) {
             Chromosome id = individuals.get(i);
@@ -163,34 +164,30 @@ public class Population {
         for (int k = 0; k < x; k = k + 2) {
             Chromosome id1 = individuals.get(k);
             Chromosome id2 = individuals.get(k + 1);
-            if (id1.getListActualValues() == null || id2.getListActualValues() == null) {
-                return;
-            } else {
-                String[] chromValue1 = id1.getListActualValues();
-                String[] chromValue2 = id2.getListActualValues();
-                if (chromValue1.length == 1 || chromValue2.length == 1 || chromValue1.length != chromValue2.length) {
-                    mutationOneChromosome();
-                    break;
-                } else {
-                    int indexValue = 1 + randomGenerator.nextInt(chromValue1.length - 1);
-                    for (int i = indexValue; i < chromValue1.length; i++) {
-                        String temp = chromValue1[i];
-                        chromValue1[i] = chromValue2[i];
-                        chromValue2[i] = temp;
-                    }
-                    Chromosome offspring1 = (Chromosome) (individuals.get(populationSize - 1 - k));
-                    offspring1.setInputValue(new ArrayList<String>(Arrays.asList(chromValue1)));
-                    chromosomeFormer.setCurrentChromosome(offspring1);
-                    chromosomeFormer.fitness = 0;
-                    chromosomeFormer.calculateApproachLevel(curTarget);
-
-                    Chromosome offspring2 = individuals.get(populationSize - 1 - k - 1);
-                    offspring2.setInputValue(new ArrayList<>(Arrays.asList(chromValue2)));
-                    chromosomeFormer.setCurrentChromosome(offspring2);
-                    chromosomeFormer.fitness = 0;
-                    chromosomeFormer.calculateApproachLevel(curTarget);
-                }
+            if (id1.getListActualValues() == null || id2.getListActualValues() == null) return;
+            String[] chromValue1 = id1.getListActualValues();
+            String[] chromValue2 = id2.getListActualValues();
+            if (chromValue1.length == 1 || chromValue2.length == 1 || chromValue1.length != chromValue2.length) {
+                mutationOneChromosome();
+                break;
             }
+            int indexValue = 1 + randomGenerator.nextInt(chromValue1.length - 1);
+            for (int i = indexValue; i < chromValue1.length; i++) {
+                String temp = chromValue1[i];
+                chromValue1[i] = chromValue2[i];
+                chromValue2[i] = temp;
+            }
+            Chromosome offspring1 = individuals.get(populationSize - 1 - k);
+            offspring1.setInputValue(new ArrayList<>(Arrays.asList(chromValue1)));
+            chromosomeFormer.setCurrentChromosome(offspring1);
+            chromosomeFormer.fitness = 0;
+            chromosomeFormer.calculateApproachLevel(curTarget);
+
+            Chromosome offspring2 = individuals.get(populationSize - 1 - k - 1);
+            offspring2.setInputValue(new ArrayList<>(Arrays.asList(chromValue2)));
+            chromosomeFormer.setCurrentChromosome(offspring2);
+            chromosomeFormer.fitness = 0;
+            chromosomeFormer.calculateApproachLevel(curTarget);
         }
     }
 
@@ -216,14 +213,15 @@ public class Population {
      * Thực hiện lai ghép và đột biến khi chưa được cover hoặc chưa đạt mức vòng lặp tối đa
      */
     public int randomCrossoverAndMutation(int currentFittestTarget) throws IOException {
+        //   System.out.println("FitestTarget = " + currentFittestTarget);
+        Collections.sort(individuals);
         int generationCount = 1;
         while (getFittest() < currentFittestTarget && generationCount < GAConfig.MAX_LOOP) {
             if (randomGenerator.nextInt(100) < 50) crossover();
             else mutation();
-
             generationCount++;
             Collections.sort(individuals);
-        //    System.out.println("Generation: " + generationCount + " Fittest: " + getFittest());
+            //    System.out.println("Generation: " + generationCount + " Fittest: " + getFittest());
         }
         return generationCount;
     }
@@ -233,7 +231,7 @@ public class Population {
      *
      * @throws IOException
      */
-    public void mutationOneChromosome() throws IOException {
+    private void mutationOneChromosome() throws IOException {
         int rd = randomGenerator.nextInt(populationSize);
         Chromosome id = individuals.get(rd);
         //System.out.println(id.toString());
