@@ -24,7 +24,17 @@ public class NumberComparator instantiates BranchInstrumentor{
         }
     }
 
-    private String checkPassword(String password) {
+    public String isPrime(int number){
+         int num = number < 2 ? 100 - number : number;
+         String result = checkPrimeNumber(num);
+         if (result.length() < 19){
+                     return "Good";
+                 }else{
+                     return "Not Good";
+                 }
+    }
+
+    public String checkPassword(String password) {
         if (password.length() < 8)
             return "Password length is less than 8";
 
@@ -45,10 +55,11 @@ public class NumberComparator instantiates BranchInstrumentor{
 
    /*  public String checkNotification(Triangle triangle) {
         String content = triangle.checkTriangle(5, 4, 8);
-        if (content.length() < 19)
+        if (content.length() < 19){
             return "Good";
-        else
+        }else{
             return "Not Good";
+        }
     }
     */
 

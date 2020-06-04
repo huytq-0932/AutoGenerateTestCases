@@ -6,21 +6,24 @@ public class Triangle instantiates BranchInstrumentor{
 	public Triangle() {
 		super();
 	}
-	public  String checkTriangle(int side1, int side2, int side3) {
-		String type = "";
-		if ((side1 + side2 > side3) && (side3 + side2 > side1) && (side1 + side3 > side2)) {
-			if ((side1 != side2) && (side1 != side3) && (side2 != side3)) {
-				type = "Is triangle scalene";
-			} else {
-				if (((side1 == side2) && (side1 != side3)) || ((side1 == side3) && (side1 != side2)) || ((side2 == side3) && (side2 != side1))) {
-					type = "Is triangle isosceles ";
-				} else {
-					type = "Is triangle equilateral ";
-				}
-			}
-		} else {
-			type = "Not a triangle";
-		}
-		return type;
-	}
+
+	public java.lang.String checkTriangle( int a, int b, int c )
+        {
+            java.lang.String type = "";
+            if (a + b > c && c + b > a && a + c > b) {
+                if (a != b && a != c && b != c) {
+                    type = "Is triangle scalene";
+                } else {
+                    if (a == b && a != c || a == c && a != b || b == c && b != a) {
+                        type = "Is triangle isosceles ";
+                    } else {
+                        type = "Is triangle equilateral ";
+                    }
+                }
+            } else {
+                type = "Not a triangle";
+            }
+            return type;
+        }
+
 }

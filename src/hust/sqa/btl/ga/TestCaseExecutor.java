@@ -9,52 +9,22 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class TestCaseExecutor {
-    /**
-     * biểu diễn của test case.
-     *
-     * @see ChromosomeFormer
-     */
+
     private String chromosome = "";
-    /**
-     *
-     */
+
     String expectResult;
 
-    /**
-     * Đếm số lần thực hiện
-     */
     public static int testCaseExecutions = 0;
 
-    /**
-     * Mảng các đối tượng để tạo test case execution.
-     * <p>
-     * Mỗi đối tượng $xN trong chromosome được liên kết với objects[N].
-     */
     private Object[] objects;
 
-    /**
-     * Mảng các class để tạo test case execution. Mỗi đối tượng $xN trong chromosome
-     * được liên kết với classes[N].
-     */
     private Class[] classes;
 
-    /**
-     * Trả về object thứ n khi tạo test case execution.
-     *
-     * @param n
-     * @return objects[n]
-     */
+
     public Object objectAt(int n) {
         return objects[n];
     }
 
-    /**
-     * Wraps primitive types and maps object vars into object types. Kết hợp các
-     * primitive type và ánh xạ các biến thành object types
-     *
-     * @param type Kiểu primitive type or 1 object var.
-     * @return Wrapper type/class.
-     */
     public Class mapTypeToClass(String type) {
         try {
             if (ChromosomeFormer.isPrimitiveArrayType(type)) {
@@ -97,12 +67,6 @@ public class TestCaseExecutor {
         return null;
     }
 
-    /**
-     * Kết hợp value với obj và trả về previously allocated objects
-     *
-     * @param val either $xN or an integer value
-     * @return Either objects[N] for $xN, or new Integer(val).
-     */
     public Object[] mapArrayValueToObject(String val) {
         if (val.equals("null"))
             return null;
@@ -130,10 +94,6 @@ public class TestCaseExecutor {
         return obj;
     }
 
-    /**
-     * @param val
-     * @return
-     */
     public Object mapValueToObject(String val) {
         if (val.equals("null"))
             return null;
@@ -153,13 +113,7 @@ public class TestCaseExecutor {
         return obj;
     }
 
-    /**
-     * Executes 1 action đã passed như 1 parameter. Action để thực thi có thể là xây
-     * dựng constructor 1 đối tượng hoặc gọi 1 method
-     *
-     * @param action action sẽ execute.
-     * @param values tham số thực tế
-     */
+
     private void execute(String action, String[] values) {
         if (action.contains("=")) {
             executeObjectConstruction(action, values);
@@ -168,13 +122,6 @@ public class TestCaseExecutor {
         }
     }
 
-    /**
-     * Xác định Constuctor tương thích với parameter
-     *
-     * @param cl     Lớp chứa phương thức.
-     * @param params Các kiểu tham số thực tế.
-     * @return Constructor tương thích (null nếu không tồn tại).
-     */
     private Constructor getConstructor(Class cl, Class[] params) {
         Constructor constr = null;
         Constructor[] classConstructors = cl.getConstructors();
@@ -193,12 +140,6 @@ public class TestCaseExecutor {
         return null;
     }
 
-    /**
-     * Xây dựng 1 đối tượng mà method trả về
-     *
-     * @param action constructor sẽ thực hiện
-     * @param values tham số của constructor
-     */
     private void executeObjectConstruction(String action, String[] values) {
         String className = "";
         try {
@@ -243,14 +184,6 @@ public class TestCaseExecutor {
         }
     }
 
-    /**
-     * Xác định method tương thích với parameter
-     *
-     * @param cl         class chứa method
-     * @param methodName tên method
-     * @param params     kiểu tham số thực tế
-     * @return Method tương thích (null nếu không tồn tại).
-     */
     private Method getMethod(Class cl, String methodName, Class[] params) {
 
         Method method = null;
@@ -276,12 +209,6 @@ public class TestCaseExecutor {
 
     }
 
-    /**
-     * Invoke method theo yêu cầu của action
-     *
-     * @param action The method invocation action được thực hiện
-     * @param values tham số thực tế cho invocation.
-     */
     private void executeMethodInvocation(String action, String[] values) {
         try {
             String targetName = action.substring(action.indexOf("$x") + 2, action.indexOf("."));
@@ -358,10 +285,6 @@ public class TestCaseExecutor {
         }
     }
 
-    /**
-     * reset lại chỉ số biến Example: "$x21=A():$x22.m($x21)" thành
-     * "$x0=A():$x1.m($x0)".
-     */
     private String renameChromosomeVariables(String chrom) {
         String inputDescription = chrom.substring(0, chrom.indexOf("@"));
         String[] actions = inputDescription.split(":");
@@ -389,13 +312,6 @@ public class TestCaseExecutor {
         return chrom;
     }
 
-    /**
-     * Thực hiện testcase được mã hóa bởi chromosome Cá thể được chia thành 2 phần
-     * description and value. Mỗi action được mô tả đầu vào, sau đó thực hiện
-     *
-     * @param classUnderTest Class đang được thực tiện test
-     * @param chrom          chromosome sẽ test
-     */
     public void execute(String classUnderTest, String chrom) {
 
         Method setUpExec;
@@ -449,25 +365,18 @@ public class TestCaseExecutor {
 
     }
 
-    /**
-     * Yêu cầu theo dõi trace cho lớp đang test
-     *
-     * @param classUnderTest class đang được test
-     * @return trace: Set<Integer>
-     * @throws IOException
-     */
     public Collection getExecutionTrace(String classUnderTest) throws IOException {
         try {
             // getTrace của classUnderTest (class chính)
             Class cl = Class.forName(classUnderTest);
-            Method getTrace = cl.getDeclaredMethod("getTrace", new Class[0]);
-            Collection trace = (Collection) getTrace.invoke(null, new Object[0]);
+            Method method = cl.getDeclaredMethod("getTrace");
+            Collection trace = (Collection) method.invoke(null, new Object[0]);
             //System.out.println(trace);
 
             List extendTarget = new LinkedList<>();
 
             // getTrace của các class còn lại
-            for (String s : MainGA.inputs) {
+            for (String s : GA.inputs) {
                 if (!s.equals(classUnderTest)) {
 
                     Class subCl = Class.forName(s);
@@ -475,7 +384,7 @@ public class TestCaseExecutor {
                     Collection subTrace = (Collection) subGetTrace.invoke(null, new Object[0]);
                     for (Object o : subTrace) trace.add(o);
                     if (!subTrace.isEmpty() && Population.getExtendTarget().isEmpty()) {
-                        List<String> extendTargetString = MainGA.generateExtendTarget(s, subTrace);
+                        List<String> extendTargetString = GA.generateExtendTarget(s, subTrace);
 
                         Set curTarget = Population.preTarget;
                         if (curTarget == null) curTarget = Population.getCurTarget();
@@ -525,19 +434,13 @@ public class TestCaseExecutor {
         return null;
     }
 
-
-    /**
-     * Resets laị trace thực hiện của lớp đang test
-     *
-     * @param classUnderTest class đang được test
-     */
     public void resetExecutionTrace(String classUnderTest) {
         try {
             Class cl = Class.forName(classUnderTest);
             Method newTrace = cl.getDeclaredMethod("newTrace");
             newTrace.invoke(null);
 
-            for (String s : MainGA.inputs) {
+            for (String s : GA.inputs) {
                 if (!s.equals(classUnderTest)) {
                     Class subCl = Class.forName(s);
                     Method subNewTrace = subCl.getDeclaredMethod("newTrace");

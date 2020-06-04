@@ -5,36 +5,16 @@ import java.util.Iterator;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Định nghĩa Action
- */
 public class Action implements Cloneable {
-    /**
-     * Lưu target object.
-     */
+
     String targetObject;
 
-    /**
-     * Action name.
-     */
     String name;
 
-    /**
-     * Lưu các loại param
-     * <p>
-     * Example: ("int", "B", "A", "int").
-     */
     List<String> parameterTypes = new ArrayList<>();
 
-    /**
-     * Giá trị tham số
-     * <p>
-     * Example: ("12", "$x2", "$x0", "23")
-     */
     List<String> parameterValues = new ArrayList<>();
-    /**
-     *
-     */
+
     String expectResult;
 
     public Object clone() {
@@ -47,24 +27,13 @@ public class Action implements Cloneable {
         return act;
     }
 
-    /**
-     * get ParameterValues
-     */
     public List getParameterValues() {
         return parameterValues;
     }
 
-    /**
-     * set ParameterValues
-     */
     public void setParameterValuesMethod(List<String> newParameterValues) {
     }
 
-    /**
-     * get các param là tham số
-     * <p>
-     * Example: ("$x2", "$x0") trong tập ("12", "$x2", "$x0", "23")
-     */
     public List<String> getParameterObjects() {
         List<String> paramObjects = new ArrayList<>();
         if (parameterTypes == null || parameterValues == null) return paramObjects;
@@ -79,51 +48,29 @@ public class Action implements Cloneable {
         return paramObjects;
     }
 
-    /**
-     * Get targetObject
-     */
     String getObject() {
         return targetObject;
     }
-
-    /**
-     * Set targetObject
-     */
     void setObject(String newTargetObject) {
         targetObject = newTargetObject;
     }
 
-    /**
-     * set name
-     */
     String getName() {
         return name;
     }
 
-    /**
-     * Code biểu diễn cho action.
-     */
     String toCode() {
         return "";
     }
 
-    /**
-     * Chuỗi mô tả action
-     */
     String actionDescription() {
         return actionPrefix() + parameterDescription();
     }
 
-    /**
-     * tiền tố action
-     */
     String actionPrefix() {
         return "";
     }
 
-    /**
-     * String biểu diễn kiểu param
-     */
     String parameterDescription() {
         if (parameterTypes == null || parameterValues == null)
             return "";
@@ -144,9 +91,6 @@ public class Action implements Cloneable {
         return s;
     }
 
-    /**
-     * String biểu diễn giá trị param
-     */
     String actualValues() {
         if (parameterValues == null || parameterTypes == null)
             return "";
@@ -166,11 +110,6 @@ public class Action implements Cloneable {
         return s;
     }
 
-    /**
-     * Thay đổi ngẫu nhiên một giá trị của action.
-     *
-     * @param valIndex chỉ số của giá trị primitive type thay đổi
-     */
     public void changeInputValue(int valIndex) {
         if (parameterValues == null || parameterTypes == null)
             return;
@@ -197,9 +136,6 @@ public class Action implements Cloneable {
         parameterValues = newParamVals;
     }
 
-    /**
-     * Số lượng primitive type ( int, float..)
-     */
     public int countPrimitiveTypes() {
         if (parameterValues == null || parameterTypes == null) return 0;
         return (int) parameterValues.stream()

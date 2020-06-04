@@ -9,26 +9,19 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class MainGA {
+public class GA {
     static String[] inputs = {"Triangle", "NumberComparator"};
-    private static final String CLASS_UNDER_TEST = "Triangle";
+    private static final String CLASS_UNDER_TEST = "NumberComparator";
     static float coverRatio = 0f;
     static int numberGen = 0;
     private static long startTime = 0L;
 
     private static TestGenerator testGenerator = null;
 
-    /**
-     * Main chính
-     *
-     * @param args
-     * @throws InterruptedException
-     * @throws IOException
-     */
     public static void main(String[] args) throws InterruptedException, IOException {
 
         setupTestGenerator(CLASS_UNDER_TEST);
-        generateTestcaseWithGA(CLASS_UNDER_TEST);
+        generateTestcase(CLASS_UNDER_TEST);
     }
 
     private static void setupTestGenerator(String classUnderTest) {
@@ -58,13 +51,7 @@ public class MainGA {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * tạo các testcase bằng cách áp dụng GA
-     *
-     * @param classUnderTest class đang tạo unit test
-     * @throws IOException
-     */
-    public static void generateTestcaseWithGA(String classUnderTest) throws IOException {
+    public static void generateTestcase(String classUnderTest) throws IOException {
         Population destinationPopulation = null;
         List<Set<String>> coveredBranchTargets = new ArrayList<>();
         List<Set<String>> unCoveredBranchTarget = new ArrayList<>();
@@ -74,28 +61,16 @@ public class MainGA {
 
         System.out.println("========= Target");
         for (String s : listTarget) {
-            System.out.println(s);
-        }
-        System.out.println("========= Branch Target");
-        for (Set<String> set : branchTargets) {
-            System.out.println(set);
+            System.out.println("target: " + s);
         }
 
         String[] branchWithMethod = getBranchForMethod(listTarget, branchTargets);
 
-        System.out.println("====BranchWithMethod");
-        for (String branch : branchWithMethod) {
-            System.out.println(branch);
-        }
 
         int numberOfTestcase = 0;
         boolean covered = false;
 
         String[] methods = getMethods(classUnderTest);
-        System.out.println("==== Methods");
-        for (String method : methods) {
-            System.out.println(method);
-        }
 
         for (int methodIndex = 0; methodIndex < methods.length; methodIndex++) {
 
@@ -106,9 +81,10 @@ public class MainGA {
 
             // Với mỗi target, xây dựng quần thể ban đầu và thực hiên thuật toán GA
             for (int i = branchIds.get(0); i <= branchIds.get(branchIds.size() - 1); i++) {
-                Population.setCurTarget(branchTargets.get(i));
+                Set<String> branchTarget = branchTargets.get(i);
+                Population.setCurTarget(branchTarget);
 
-                String[] target = (String.join(", ", branchTargets.get(i))).split(",");
+                String[] target = (String.join(", ", branchTarget)).split(",");
                 int curFittestTarget = target.length;
 
                 Population initPop = Population.generateRandomPopulation();
@@ -154,35 +130,36 @@ public class MainGA {
                             Collections.sort(initPop.individuals);
                         }
                     }
-                    // clear extendTarget đi
                     Population.extendTarget.clear();
                 }
                 if (covered) {
-                    coveredBranchTargets.add(branchTargets.get(i));
+                    coveredBranchTargets.add(branchTarget);
                 } else
-                    unCoveredBranchTarget.add(branchTargets.get(i));
+                    unCoveredBranchTarget.add(branchTarget);
                 covered = false;
             }
         }
+        printResult(classUnderTest, destinationPopulation, coveredBranchTargets.size(), unCoveredBranchTarget.size());
+    }
+
+    private static void printResult(String classUnderTest, Population destination, int covered, int unCovered) {
         long time = System.currentTimeMillis() - startTime;
-        if (!coveredBranchTargets.isEmpty()) {
-            for (Chromosome chromosome : destinationPopulation.individuals) {
+        if (covered == 0) {
+            System.out.println("Không tạo được testcase");
+        } else {
+            System.out.println("============== Result ==============\n");
+            for (Chromosome chromosome : destination.individuals) {
                 System.out.println(chromosome.toString());
                 System.out.println(chromosome.target);
             }
             testGenerator.junitFile = classUnderTest + "Test.java";
-            testGenerator.printJunitFileFirst(destinationPopulation);
-        } else {
-            System.out.println("Không tạo được testcase");
+            testGenerator.printJunitFileFirst(destination);
         }
 
-        coverRatio = coverRatio + (float) coveredBranchTargets.size()
-                / (coveredBranchTargets.size() + unCoveredBranchTarget.size()) * 100;
-
+        coverRatio = coverRatio + (float) covered / (covered + unCovered) * 100;
         System.out.println("===============================");
         System.out.println("Tổng thời gian tạo testcase:" + (float) time / 1000 + "s");
-        System.out.println("Tỉ lệ cover: " + coveredBranchTargets.size() + "/"
-                + (coveredBranchTargets.size() + unCoveredBranchTarget.size()) + " ~ " + coverRatio + "%");
+        System.out.println("Tỉ lệ cover: " + covered + "/" + (covered + unCovered) + " ~ " + coverRatio + "%");
     }
 
     /**
@@ -238,14 +215,6 @@ public class MainGA {
         return branchWithMethod;
     }
 
-    /**
-     * Lấy ra các branch target khi intergration test
-     *
-     * @param subClassUnderTest class integrate
-     * @param subTrace          đường dẫn extends
-     * @return
-     * @throws IOException
-     */
     public static List<String> generateExtendTarget(String subClassUnderTest, Collection subTrace) throws IOException {
         List<String> target = new LinkedList();
 
@@ -269,13 +238,6 @@ public class MainGA {
 
     }
 
-    /**
-     * Lấy các các target method có intergrate
-     *
-     * @param listTarget
-     * @param subTraceString
-     * @return
-     */
     public static List<String> getTargetFromCoverPath(List listTarget, String subTraceString) {
         List<String> target = new ArrayList<>();
         for (int i = 1; i < listTarget.size(); i++) {
@@ -308,13 +270,6 @@ public class MainGA {
         return target;
     }
 
-    /**
-     * Lấy các branch target
-     *
-     * @param target
-     * @param listBranchTarget
-     * @return
-     */
     public static String[] getBranchForTarget(String target, List<Set<String>> listBranchTarget) {
         String[] branchWithTarget = new String[target.split(",").length];
         int i = 0;

@@ -5,7 +5,7 @@ import hust.sqa.btl.utils.Paths;
 /**
  * Thực hiện phân tích code
  */
-public class MainInstrument {
+public class Instrument {
 
     public static void main(String[] args) {
 

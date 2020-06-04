@@ -4,17 +4,10 @@ import hust.sqa.btl.utils.ValueConfig;
 
 import java.util.Random;
 
-/**
- * @author AnhBTN
- */
+
 public class StringGenerator {
     public static Random randomGenerator = new Random();
 
-    /**
-     * Random 1 chuỗi Chỉ tạo ra chuỗi gồm chữ và số và các kí tự đặt biệt
-     *
-     * @return string được tạo
-     */
     public String newString() {
         // tập các kí tự tạo chuỗi
         String AlphaNumericString = ValueConfig.CHARACTER_SET;
@@ -31,13 +24,6 @@ public class StringGenerator {
         return sb.toString();
     }
 
-    /**
-     * Random 1 chuỗi Chỉ tạo ra chuỗi gồm chữ và số
-     *
-     * @param low số kí tự tối thiểu
-     * @param up  số kí tự tối đa
-     * @return string được tạo
-     */
     public String newString(int low, int up) {
 
         // tập các kí tự tạo chuỗi
@@ -55,5 +41,4 @@ public class StringGenerator {
         }
         return sb.toString();
     }
-
 }

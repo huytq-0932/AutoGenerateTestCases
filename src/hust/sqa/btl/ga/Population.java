@@ -7,122 +7,61 @@ import java.io.IOException;
 import java.util.*;
 
 public class Population {
-    /**
-     * Used to randomly select individuals for new population.
-     */
+
     private static Random randomGenerator = new Random();
-    /**
-     * Target hiện tại đang xét của population
-     */
+
     private static Set curTarget;
 
-    /**
-     * @return the curTarget
-     */
+
     public static Set getCurTarget() {
         return curTarget;
     }
 
-    /**
-     * @param curTarget the curTarget to set
-     */
     public static void setCurTarget(Set curTarget) {
         Population.curTarget = curTarget;
     }
 
-    /**
-     * các branch mở rộng ( khi gọi đến method khác)
-     */
     static List<Set> extendTarget = new LinkedList<Set>();
-    ;
 
-    /**
-     * @return the extendTarget
-     */
     public static List<Set> getExtendTarget() {
         return extendTarget;
     }
 
-    /**
-     * @param extendTarget the extendTarget to set
-     */
     public static void setExtendTarget(List<Set> extendTarget) {
         Population.extendTarget = extendTarget;
     }
 
-    /**
-     * Target hiện tại đang xét của population
-     */
     static Set preTarget;
 
-    /**
-     * Method đang test
-     */
     static int idMethodUnderTest;
 
-    /**
-     * @return the idMethodUnderTest
-     */
     public int getIdMethodUnderTest() {
         return idMethodUnderTest;
     }
 
-    /**
-     * @param idMethodUnderTest the idMethodUnderTest to set
-     */
     public void setIdMethodUnderTest(int idMethodUnderTest) {
         this.idMethodUnderTest = idMethodUnderTest;
     }
 
-    /**
-     * list các cá thể
-     * <p>
-     * List<Chromosome>
-     */
     List<Chromosome> individuals;
 
-    /**
-     * ChromosomeFormer chịu trách nhiệm tạo ra từng cá thể đơn lẻ và sự tiến hóa /
-     * tái hợp của nó.
-     */
     static ChromosomeFormer chromosomeFormer;
 
-    /**
-     * Thông số chính của thuật toán di truyền: số lượng cá thể (nhiễm sắc thể)
-     * trong quần thể
-     */
     public static int populationSize = GAConfig.POPULATION_SIZE;
 
-    /**
-     * khởi tạo population
-     */
     public Population(List<Chromosome> id) {
         individuals = id;
     }
 
-    /**
-     * tạo mới ChromosomeFormer.
-     *
-     * @param signFile Tập tin có chữ ký phương thức. từ đó tạo ra chromosome
-     */
     public static void setChromosomeFormer(String signFile) {
         chromosomeFormer = new ChromosomeFormer();
         chromosomeFormer.readSignatures(signFile);
     }
 
-    /**
-     * @param chromosomeFormer the chromosomeFormer sẽ set
-     */
     public static void setChromosomeFormer(ChromosomeFormer chromosomeFormer) {
         Population.chromosomeFormer = chromosomeFormer;
     }
 
-    /**
-     * Khởi tạo population ban đầu
-     *
-     * @return population chứa các cá thể
-     * @throws IOException
-     */
     public static Population generateRandomPopulation() throws IOException {
         List<Chromosome> individuals = new ArrayList<>();
         chromosomeFormer.idMethodUnderTest = idMethodUnderTest;
@@ -136,11 +75,6 @@ public class Population {
         return new Population(individuals);
     }
 
-    /**
-     * lựa chọn quần thể con
-     *
-     * @return quần thể
-     */
     public Population selection() {
         int numberSelection = (int) (populationSize* GAConfig.CUMULATIVE_PROBABILITY);
    //     populationSize = Math.min(populationSize, numberSelection);
@@ -154,11 +88,6 @@ public class Population {
 
     }
 
-    /**
-     * lai ghép
-     *
-     * @throws IOException
-     */
     public void crossover() throws IOException {
         int x = (int) (populationSize * GAConfig.CUMULATIVE_PROBABILITY / 2);
         for (int k = 0; k < x; k = k + 2) {
@@ -191,11 +120,6 @@ public class Population {
         }
     }
 
-    /**
-     * đột biến cá thể bất kì trong quần thể được chọn
-     *
-     * @throws IOException
-     */
     public void mutation() throws IOException {
         int x = (int) (populationSize * GAConfig.MUTATION_PROBABILITY);
         for (int i = 0; i < x; i++) {
@@ -209,9 +133,6 @@ public class Population {
         }
     }
 
-    /**
-     * Thực hiện lai ghép và đột biến khi chưa được cover hoặc chưa đạt mức vòng lặp tối đa
-     */
     public int randomCrossoverAndMutation(int currentFittestTarget) throws IOException {
         //   System.out.println("FitestTarget = " + currentFittestTarget);
         Collections.sort(individuals);
@@ -226,11 +147,6 @@ public class Population {
         return generationCount;
     }
 
-    /**
-     * đột biến 1 cá thể
-     *
-     * @throws IOException
-     */
     private void mutationOneChromosome() throws IOException {
         int rd = randomGenerator.nextInt(populationSize);
         Chromosome id = individuals.get(rd);
@@ -241,23 +157,12 @@ public class Population {
         chromosomeFormer.calculateApproachLevel(curTarget);
     }
 
-    /**
-     * Lấy fitness cao nhất của chromosome
-     *
-     * @return
-     */
     public double getFittest() {
         Chromosome id1 = individuals.get(0);
         chromosomeFormer.setCurrentChromosome(id1);
         return chromosomeFormer.fitness;
     }
 
-    /**
-     * Tạo population chứa các chromosome sẽ mang đi tạo testcase
-     *
-     * @return population chứa các cá thể
-     * @throws IOException
-     */
     public Population generateDestinationPopulation() throws IOException {
         List<Chromosome> newIndividuals = new ArrayList<>();
         Chromosome id = individuals.get(0);
@@ -266,13 +171,6 @@ public class Population {
         return new Population(newIndividuals);
     }
 
-    /**
-     * Add thêm chromosome cho Destination Population
-     *
-     * @param pop Destination Population đã có
-     * @return
-     * @throws IOException
-     */
     public Population addDestinationPopulation(Population pop) throws IOException {
         Population newPopulation = new Population(pop.individuals);
         Chromosome id = individuals.get(0);
@@ -283,9 +181,6 @@ public class Population {
         return newPopulation;
     }
 
-    /**
-     *
-     */
     public String toString() {
         StringBuilder s = new StringBuilder();
         for (Chromosome id : individuals) {
